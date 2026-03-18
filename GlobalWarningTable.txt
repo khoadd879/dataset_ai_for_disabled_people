@@ -1,0 +1,35 @@
+nguy_hiem_cao = [
+    # Nhóm địa hình sụt lún, vấp ngã
+    "ổ gà", "ổ voi", "nắp cống hở", "hố ga mất nắp", "bậc tam cấp đi xuống", "rãnh nước sâu", "vũng nước sâu",
+    
+    # Nhóm công trình, vật liệu sắc nhọn
+    "rào chắn công trình", "cốt thép nhô lên", "đống xà bần", "gạch đá ngổn ngang", "kính vỡ", "hàng rào rào thép gai",
+    
+    # Nhóm chướng ngại vật trên không (nguy hiểm vùng đầu)
+    "dây điện sà xuống thấp", "cành cây gãy", "bảng hiệu sắt sắc bén",
+    
+    # Nhóm nhiệt độ, động vật rủi ro
+    "bếp than tổ ong đang cháy", "chó thả rông", 
+    
+    # Nhóm phương tiện động
+    "xe tải đang lùi", "xe máy đi ngược chiều trên vỉa hè", "ô tô đang rẽ"
+]
+
+# =====================================================================
+# 2. NGUY HIỂM THẤP / TRUNG BÌNH (Chỉ cần lách tránh, không đe dọa ngay)
+# =====================================================================
+nguy_hiem_thap = [
+    # Nhóm lấn chiếm vỉa hè (Đặc sản Việt Nam)
+    "xe máy đỗ vỉa hè", "xe đạp đỗ", "bàn ghế quán nước", "ghế nhựa", "bàn nhựa", 
+    "xe đẩy bán hàng rong", "tủ kính bán bánh mì", "bảng hiệu quảng cáo đứng", "mái hiên bạt che thấp",
+    
+    # Nhóm hạ tầng đô thị
+    "cột điện", "cột đèn chiếu sáng", "tủ điện vỉa hè", "biển báo giao thông", "cột nước cứu hỏa",
+    "thùng rác công cộng", "xe đẩy thu gom rác", "chậu cây cảnh", "bồn cây xây gạch",
+    
+    # Nhóm con người & động vật hiền lành
+    "người đi bộ", "đám đông đứng chờ", "trẻ em đang chơi", "chó mèo nằm ngủ",
+    
+    # Nhóm địa hình nhẹ
+    "vũng nước nông", "bậc tam cấp đi lên", "gờ giảm tốc", "nắp cống lồi"
+]

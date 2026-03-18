@@ -2,69 +2,115 @@ import json
 import random
 import time
 import google.generativeai as genai
+import os
+from dotenv import load_dotenv
 
 # ==========================================
 # 1. CẤU HÌNH API GEMINI
-# Lấy key miễn phí tại: https://aistudio.google.com/app/apikey
 # ==========================================
-GOOGLE_API_KEY = "ĐIỀN_API_KEY_CỦA_BẠN_VÀO_ĐÂY"
+load_dotenv()
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
-
-# Dùng bản Flash cho nhanh và miễn phí
-model = genai.GenerativeModel('gemini-1.5-flash') 
+model = genai.GenerativeModel('gemini-2.0-flash') 
 
 # ==========================================
-# 2. TẠO TÌNH HUỐNG (Từ code cũ của bạn)
+# 2. TẠO TÌNH HUỐNG (Hệ tọa độ OXZ mới)
 # ==========================================
-nguy_hiem_cao = ["ổ gà", "nắp cống hở", "bậc tam cấp đi xuống", "vũng nước sâu", "xe tải đang lùi"]
-nguy_hiem_thap = ["xe máy đỗ", "người đi bộ", "thùng rác", "ghế nhựa", "cột điện"]
-huong_list = ["10 giờ", "11 giờ", "12 giờ", "1 giờ", "2 giờ"]
-khoang_cach_list = [0.5, 0.8, 1.2, 1.5, 2.0, 2.5]
+# =====================================================================
+# 1. NGUY HIỂM CAO (Cần phanh gấp, né gấp - Đe dọa tính mạng/chấn thương)
+# =====================================================================
+nguy_hiem_cao = [
+    # Nhóm địa hình sụt lún, vấp ngã
+    "ổ gà", "ổ voi", "nắp cống hở", "hố ga mất nắp", "bậc tam cấp đi xuống", "rãnh nước sâu", "vũng nước sâu",
+    
+    # Nhóm công trình, vật liệu sắc nhọn
+    "rào chắn công trình", "cốt thép nhô lên", "đống xà bần", "gạch đá ngổn ngang", "kính vỡ", "hàng rào rào thép gai",
+    
+    # Nhóm chướng ngại vật trên không (nguy hiểm vùng đầu)
+    "dây điện sà xuống thấp", "cành cây gãy", "bảng hiệu sắt sắc bén",
+    
+    # Nhóm nhiệt độ, động vật rủi ro
+    "bếp than tổ ong đang cháy", "chó thả rông", 
+    
+    # Nhóm phương tiện động
+    "xe tải đang lùi", "xe máy đi ngược chiều trên vỉa hè", "ô tô đang rẽ"
+]
+
+# =====================================================================
+# 2. NGUY HIỂM THẤP / TRUNG BÌNH (Chỉ cần lách tránh, không đe dọa ngay)
+# =====================================================================
+nguy_hiem_thap = [
+    # Nhóm lấn chiếm vỉa hè (Đặc sản Việt Nam)
+    "xe máy đỗ vỉa hè", "xe đạp đỗ", "bàn ghế quán nước", "ghế nhựa", "bàn nhựa", 
+    "xe đẩy bán hàng rong", "tủ kính bán bánh mì", "bảng hiệu quảng cáo đứng", "mái hiên bạt che thấp",
+    
+    # Nhóm hạ tầng đô thị
+    "cột điện", "cột đèn chiếu sáng", "tủ điện vỉa hè", "biển báo giao thông", "cột nước cứu hỏa",
+    "thùng rác công cộng", "xe đẩy thu gom rác", "chậu cây cảnh", "bồn cây xây gạch",
+    
+    # Nhóm con người & động vật hiền lành
+    "người đi bộ", "đám đông đứng chờ", "trẻ em đang chơi", "chó mèo nằm ngủ",
+    
+    # Nhóm địa hình nhẹ
+    "vũng nước nông", "bậc tam cấp đi lên", "gờ giảm tốc", "nắp cống lồi"
+]
 
 SYSTEM_PROMPT = "Bạn là trợ lý dẫn đường khẩn cấp cho người khiếm thị. Trả lời dứt khoát dưới 20 chữ."
+output_file = "llama3_dataset_gemini_toado.jsonl"
+so_luong_tinh_huong = 1000
 
-# Chuẩn bị file xuất ra
-output_file = "llama3_dataset_gemini.jsonl"
-so_luong_tinh_huong = 100 # Chạy thử 100 tình huống trước
-
-print(f"Bắt đầu nhờ Gemini xử lý {so_luong_tinh_huong} tình huống...")
+print(f"Bắt đầu nhờ Gemini xử lý tọa độ mới...")
 
 with open(output_file, "w", encoding="utf-8") as f:
     for i in range(so_luong_tinh_huong):
-        # --- Sinh JSON tình huống ngẫu nhiên ---
         so_luong_vat = random.randint(1, 3)
         danh_sach_vat_the = []
-        huong_da_dung = []
         
         for _ in range(so_luong_vat):
             vat = random.choice(random.choice([nguy_hiem_cao, nguy_hiem_thap]))
-            huong = random.choice([h for h in huong_list if h not in huong_da_dung])
-            huong_da_dung.append(huong)
-            khoang_cach = random.choice(khoang_cach_list)
             
-            danh_sach_vat_the.append({"vat_the": vat, "huong": huong, "khoang_cach_m": khoang_cach})
+            # Sinh khoảng cách trực diện (Z) từ 0.5m đến 3.0m
+            truc_dien = round(random.uniform(0.5, 3.0), 1)
+            
+            # Sinh độ lệch ngang (X) từ -1.5m (Trái) đến +1.5m (Phải)
+            lech_ngang_so = round(random.uniform(-1.5, 1.5), 1)
+            
+            # Định dạng thành chuỗi có dấu + hoặc - y hệt YOLO
+            lech_ngang_str = f"+{lech_ngang_so}" if lech_ngang_so > 0 else f"{lech_ngang_so}"
+            if lech_ngang_so == 0.0: lech_ngang_str = "0.0"
+            
+            danh_sach_vat_the.append({
+                "vat_the": vat, 
+                "truc_dien_m": truc_dien, 
+                "lech_ngang_m": lech_ngang_str
+            })
         
         yolo_json = json.dumps(danh_sach_vat_the, ensure_ascii=False)
         
-        # --- Ép Gemini đóng vai chuyên gia ---
+        # ==========================================
+        # 3. PROMPT ĐỊNH TUYẾN TỌA ĐỘ (CỰC KỲ QUAN TRỌNG)
+        # ==========================================
         prompt_cho_gemini = f"""
-        Bạn là một chuyên gia huấn luyện chó dẫn đường và hướng dẫn viên cho người khiếm thị.
-        Hệ thống camera vừa gửi về mảng JSON chứa các vật cản phía trước mặt người dùng:
+        Hệ thống camera gửi về mảng JSON các vật cản:
         {yolo_json}
         
-        Nhiệm vụ: Đưa ra MỘT câu chỉ dẫn bằng tiếng Việt thật ngắn gọn (dưới 20 chữ), dễ nghe để phát qua tai nghe.
-        Quy tắc:
-        1. Nếu có vật nguy hiểm (ổ gà, nắp cống...) cách dưới 1.5m ở hướng 12 giờ: Yêu cầu dừng lại hoặc lách sang hướng trống.
-        2. Nếu hướng 12 giờ trống, nhưng có vật cản ở hai bên (10h, 2h): Báo cáo nhanh và nhắc cứ đi thẳng.
-        3. Tuyệt đối KHÔNG giải thích, KHÔNG chào hỏi. Chỉ nhả ra câu lệnh hành động.
+        GIẢI THÍCH HỆ TỌA ĐỘ:
+        - "truc_dien_m": Khoảng cách tính bằng mét tiến thẳng về phía trước.
+        - "lech_ngang_m": Độ lệch sang hai bên. Dấu "+" là bên PHẢI, dấu "-" là bên TRÁI. 
+        - HÀNH LANG CHÍNH DIỆN: Nếu lech_ngang_m nằm trong khoảng [-0.3 đến +0.3], vật đó đang CHẮN NGAY TRƯỚC MẶT.
+        
+        Nhiệm vụ: Đưa ra MỘT câu chỉ dẫn khẩn cấp bằng tiếng Việt (dưới 20 chữ) cho người khiếm thị.
+        
+        LUẬT BẮT BUỘC:
+        1. NẾU BỊ CHẶN CHÍNH DIỆN (có vật nguy hiểm dưới 2m và lech_ngang_m từ -0.3 đến +0.3): BẮT BUỘC phải khuyên "Lách sang [hướng an toàn]" hoặc "Dừng lại".
+        2. NẾU CHÍNH DIỆN TRỐNG (các vật cản đều có lech_ngang_m < -0.4 hoặc > +0.4): Khuyên người dùng "Cứ đi thẳng" và chỉ cảnh báo nhẹ vật ở hai bên.
+        3. Tuyệt đối không đọc các con số tọa độ (+0.5, -1.2) cho người dùng nghe. Chỉ dùng chữ "Bên trái", "Bên phải", "Phía trước".
         """
         
         try:
-            # Gọi API
             response = model.generate_content(prompt_cho_gemini)
             assistant_reply = response.text.strip().replace('\n', ' ')
             
-            # Đóng gói chuẩn ChatML cho Llama 3
             mau_du_lieu = {
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
@@ -73,16 +119,14 @@ with open(output_file, "w", encoding="utf-8") as f:
                 ]
             }
             
-            # Ghi vào file
             f.write(json.dumps(mau_du_lieu, ensure_ascii=False) + "\n")
             
-            print(f"[{i+1}/{so_luong_tinh_huong}] Input: {yolo_json}")
-            print(f"       => Gemini: {assistant_reply}\n")
+            print(f"[{i+1}] Dữ liệu YOLO: {yolo_json}")
+            print(f"    => AI Dẫn đường: {assistant_reply}\n")
             
-            # Nghỉ 2 giây để không bị API chặn (Rate Limit của gói Free)
             time.sleep(2)
             
         except Exception as e:
-            print(f"Lỗi ở tình huống {i+1}: {e}")
+            print(f"Lỗi: {e}")
 
-print(f"HOÀN TẤT! Dữ liệu siêu xịn đã được lưu tại: {output_file}")
+print("Đã tạo xong dữ liệu hệ tọa độ mới!")
